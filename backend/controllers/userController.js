@@ -1,5 +1,6 @@
 import User from "../db/models/User.js";
 import genId from "../helpers/genId.js";
+import genJWT from "../helpers/genJWT.js"
 
 const register = async (req, res) => {
 	//Avoid duplicated users
@@ -33,10 +34,48 @@ const authentication = async (req, res) => {
 	}
 
 	//Check if user is confirmed
-	if (!user.confirm) {
+	if (!user.confirmed) {
 		const error = new Error("Your account is not confirmed");
+		return res.status(403).json({ msg: error.message });
+	};
+
+	//Check Password
+	if(await user.checkPassword(password)) {
+		res.json({
+			_id: user._id,
+			name: user.name,
+			email: user.email,
+			token: genJWT(user._id)
+		})
+	} else {
+		const error = new Error("Wrong Password");
 		return res.status(403).json({ msg: error.message });
 	}
 };
 
-export { register, authentication };
+const confirm = async (req, res) => {
+	const { token } = req.params
+
+	const confirmUser = await User.findOne({ token });
+
+	if(!confirmUser) {
+		const error = new Error("Token not valid");
+		return res.status(403).json({ msg: error.message });
+	}
+
+	try {
+		confirmUser.confirm = true;
+		confirmUser.token = "";
+		console.log(confirmUser);
+
+		await confirmUser.save();
+		res.json({msg: "User Confirmed"})
+
+
+	} catch (error) {
+		console.log(error)
+	}
+
+}
+
+export { register, authentication, confirm };
