@@ -1,0 +1,1 @@
+mongod -f "d:/dev/tutos/codigo-con-juan/uptask-app/backend/db/config/uptaskDBConfig.cfg"
