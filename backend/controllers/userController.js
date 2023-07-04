@@ -69,13 +69,70 @@ const confirm = async (req, res) => {
 		console.log(confirmUser);
 
 		await confirmUser.save();
-		res.json({msg: "User Confirmed"})
-
-
+		res.json({msg: "User Confirmed"});
 	} catch (error) {
 		console.log(error)
 	}
+};
 
+const forgotPassword = async (req, res) => {
+	const { email } = req.body;
+	
+	const user = await User.findOne({ email });
+
+	if (!user) {
+		const error = new Error("User does not exist");
+		return res.status(404).json({ msg: error.message });
+	}
+
+	try {
+		user.token = genId();
+		await user.save();
+		res.json({ msg: "We sent an email with further instructions"})
+	} catch (error) {
+		console.log(error);
+	}
 }
 
-export { register, authentication, confirm };
+const checkToken = async (req, res) => {
+	const { token } = req.params;
+
+	const validToken = await User.findOne({token});
+
+	if(validToken) {
+		res.json({msg: 'Valid Token'})
+	} else {
+		const error = new Error("Not Valid Token");
+		return res.status(404).json({ msg: error.message });
+	}
+}
+
+const newPassword = async (req, res) => {
+	const { token } = req.params;
+	const { password } = req.body;
+
+	const user = await User.findOne({token});
+
+	if(user) {
+		user.password = password;
+		user.token = "";
+
+		try {
+			await user.save();
+			res.json({msg: "Password Changed"})
+		} catch (error) {
+			console.log(error);
+		}
+
+		
+	} else {
+		const error = new Error("Not Valid Token");
+		return res.status(404).json({ msg: error.message });
+	}
+}
+
+const profile = async (req, res) => {
+	console.log("From Profile");
+}
+
+export { register, authentication, confirm, forgotPassword, checkToken, newPassword, profile };
