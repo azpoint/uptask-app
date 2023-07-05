@@ -64,7 +64,7 @@ const confirm = async (req, res) => {
 	}
 
 	try {
-		confirmUser.confirm = true;
+		confirmUser.confirmed = true;
 		confirmUser.token = "";
 		console.log(confirmUser);
 
