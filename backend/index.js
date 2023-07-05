@@ -6,7 +6,8 @@ import dotenv from "dotenv"
 import connectDB from "./db/config/db.js"
 
 //Router
-import userRoutes from "./routes/userRoutes.js"
+import userRoutes from "./routes/userRoutes.js";
+import projectRoutes from "./routes/projectRoutes.js"
 
 dotenv.config()
 connectDB();
@@ -15,6 +16,7 @@ app.use(express.json());
 
 //Routing
 app.use("/api/users", userRoutes);
+app.use("/api/projects", projectRoutes);
 
 
 app.listen(process.env.PORT, () => {
