@@ -1,4 +1,5 @@
 import Project from "../db/models/Project.js";
+import Task from "../db/models/Task.js";
 
 const getProjects = async (req, res) => {
 	const projects = await Project.find().where('creator').equals(req.user);
@@ -33,7 +34,14 @@ const getProject = async (req, res) => {
 			const error = new Error("You have no access to this project");
 			return res.status(401).json({msg: error.message})
 		}
-		res.json(project)
+
+		const tasks = await Task.find().where("project").equals(project._id);
+		
+
+		res.json({
+			project,
+			tasks
+		})
 	} catch (error) {
 		const error2 = new Error("Project not Found!");
 		res.status(404).json({msg: error2.message})
@@ -94,7 +102,23 @@ const addColl = async (req, res) => {};
 
 const deleteColl = async (req, res) => {};
 
-const getTasks = async (req, res) => {};
+const getTasks = async (req, res) => {
+	const {id } = req.params;
+
+	try {
+		const isAProject = await Project.findById(id)
+
+		if(!isAProject) {
+			const error = new Error("Project not Found");
+			return res.status(404).json({msg: error.message});
+		}
+
+		const tasks = await Task.find().where("project").equals(id);
+		res.json(tasks)
+	} catch (error) {
+		
+	}
+};
 
 export {
 	getProjects,
