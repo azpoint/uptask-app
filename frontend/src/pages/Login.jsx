@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const Login = () => {
 	return (
 		<>
@@ -8,10 +10,7 @@ const Login = () => {
 				</span>
 			</h1>
 
-			<form
-				action=""
-				className="my-20 bg-white shadow-lg rounded-lg p-10"
-			>
+			<form action="" className="my-20 bg-white shadow-lg rounded-lg p-10">
 				<div className="my-5">
 					<label
 						htmlFor="email"
@@ -43,11 +42,17 @@ const Login = () => {
 				</div>
 
 				<input
-				type="submit"
-				value="Login"
-				className="bg-sky-600 w-full py-3 text-gray-50 uppercase font-bold rounded-lg hover:bg-sky-800 hover:cursor-pointer transition-colors mb-5"
+					type="submit"
+					value="Login"
+					className="bg-sky-600 w-full py-3 text-gray-50 uppercase font-bold rounded-lg hover:bg-sky-800 hover:cursor-pointer transition-colors mb-5"
 				/>
 			</form>
+
+			<nav className="lg:flex lg:justify-between">
+				<Link to="/register" className="block text-center my-5 text-slate-500 uppercase text-sm">No account? Register here</Link>
+
+				<Link to="/forgot-password" className="block text-center my-5 text-slate-500 uppercase text-sm">Forgot Password</Link>
+			</nav>
 		</>
 	);
 };
