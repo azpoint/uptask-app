@@ -1,6 +1,7 @@
 //Dependencies
-import express from "express"
-import dotenv from "dotenv"
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
 
 //DB
 import connectDB from "./db/config/db.js"
@@ -14,6 +15,21 @@ dotenv.config()
 connectDB();
 const app = express();
 app.use(express.json());
+
+//CORS setup
+const whiteList = [process.env.FRONTEND_URL];
+
+const corsOptions = {
+	origin: function(origin, callback) {
+		if(whiteList.includes(origin)) {
+			callback(null, true);
+		} else {
+			callback(new Error("CORS error"));
+		}
+	}
+}
+
+app.use(cors(corsOptions));
 
 //Routing
 app.use("/api/users", userRoutes);

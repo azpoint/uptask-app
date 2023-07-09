@@ -1,6 +1,75 @@
+//Dependencies
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+
+//Components
+import Alert from "../components/Alert";
 
 const Register = () => {
+	const [name, setName] = useState("");
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+	const [repeatPassword, setRepeatPassword] = useState("");
+	const [alert, setAlert] = useState({});
+
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+
+		if ([name, email, password, repeatPassword].includes("")) {
+			setAlert({
+				msg: "All Fields are Mandatory",
+				error: true,
+			});
+			return;
+		}
+
+		if (password !== repeatPassword) {
+			setAlert({
+				msg: "Passwords do not match",
+				error: true,
+			});
+			return;
+		}
+
+		if (password.length < 8) {
+			setAlert({
+				msg: "8 characters minimum",
+				error: true,
+			});
+			return;
+		}
+
+		setAlert({});
+
+		//Create user in the API
+		try {
+			const { data } = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/register`, {
+				name,
+				email,
+				password,
+			});
+
+			setAlert({
+				msg: data.msg,
+				error: false
+			});
+
+			setName("");
+			setEmail("");
+			setPassword("");
+			setRepeatPassword("");
+
+		} catch (error) {
+			setAlert({
+				msg: error.response.data.msg,
+				error: true
+			});
+		}
+	};
+
+	const { msg } = alert;
+
 	return (
 		<>
 			<h1 className="text-sky-600 font-bold text-6xl capitalize">
@@ -10,7 +79,11 @@ const Register = () => {
 				</span>
 			</h1>
 
-			<form action="" className="my-20 bg-white shadow-lg rounded-lg p-10">
+			<form
+				action=""
+				onSubmit={handleSubmit}
+				className="mt-20 mb-5 bg-white shadow-lg rounded-lg p-10"
+			>
 				<div className="my-5">
 					<label
 						htmlFor="name"
@@ -18,12 +91,14 @@ const Register = () => {
 					>
 						Name
 					</label>
-					
+
 					<input
 						id="name"
 						type="text"
 						placeholder="Your Name"
 						className="w-full mt-3 p-2 border rounded-lg bg-gray-50"
+						value={name}
+						onChange={(e) => setName(e.target.value)}
 					/>
 				</div>
 
@@ -39,6 +114,8 @@ const Register = () => {
 						type="email"
 						placeholder="email for registration"
 						className="w-full mt-3 p-2 border rounded-lg bg-gray-50"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
 					/>
 				</div>
 
@@ -54,6 +131,8 @@ const Register = () => {
 						type="password"
 						placeholder="Your Password"
 						className="w-full mt-3 p-2 border rounded-lg bg-gray-50"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
 					/>
 				</div>
 
@@ -69,6 +148,8 @@ const Register = () => {
 						type="password"
 						placeholder="Repeat Your Password"
 						className="w-full mt-3 p-2 border rounded-lg bg-gray-50"
+						value={repeatPassword}
+						onChange={(e) => setRepeatPassword(e.target.value)}
 					/>
 				</div>
 
@@ -78,6 +159,8 @@ const Register = () => {
 					className="bg-sky-600 w-full py-3 text-gray-50 uppercase font-bold rounded-lg hover:bg-sky-800 hover:cursor-pointer transition-colors mb-5"
 				/>
 			</form>
+
+			{msg && <Alert alert={alert} />}
 
 			<nav className="lg:flex lg:justify-between">
 				<Link
