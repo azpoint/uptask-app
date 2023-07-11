@@ -1,6 +1,7 @@
 import User from "../db/models/User.js";
 import genId from "../helpers/genId.js";
-import genJWT from "../helpers/genJWT.js"
+import genJWT from "../helpers/genJWT.js";
+import { emailRegister } from "../helpers/emails.js"; 
 
 const register = async (req, res) => {
 	//Avoid duplicated users
@@ -16,6 +17,15 @@ const register = async (req, res) => {
 		const user = new User(req.body);
 		user.token = genId();
 		await user.save();
+
+		//Send Confirmation email
+		emailRegister({
+			email: user.email,
+			name: user.name,
+			token: user.token
+		})
+
+
 		res.json({msg: "User Created Successfully, check your email"});
 	} catch (error) {
 		console.log(error);
