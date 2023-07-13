@@ -1,6 +1,50 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+
+//Components
+import Alert from "../components/Alert";
 
 const Login = () => {
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+	const [alert, setAlert] = useState({});
+
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+
+		if ([email, password].includes("")) {
+			setAlert({
+				msg: "All fields are required",
+				error: true,
+			});
+
+			return;
+		}
+
+		try {
+			const { data } = await axios.post(
+				`${
+					import.meta.env.VITE_BACKEND_URL
+				}/api/users/login`,
+				{
+					email,
+					password
+				}
+			);
+
+			setAlert({});
+			localStorage.setItem('token', data.token)
+		} catch (error) {
+			setAlert({
+				msg: error.response.data.msg,
+				error: true
+			})
+		}
+	};
+
+	const { msg } = alert;
+
 	return (
 		<>
 			<h1 className="text-sky-600 font-bold text-6xl capitalize">
@@ -10,7 +54,11 @@ const Login = () => {
 				</span>
 			</h1>
 
-			<form action="" className="my-20 bg-white shadow-lg rounded-lg p-10">
+			<form
+				action=""
+				className="mt-20 mb-5 bg-white shadow-lg rounded-lg p-10"
+				onSubmit={handleSubmit}
+			>
 				<div className="my-5">
 					<label
 						htmlFor="email"
@@ -23,6 +71,8 @@ const Login = () => {
 						type="email"
 						placeholder="email for registration"
 						className="w-full mt-3 p-2 border rounded-lg bg-gray-50"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
 					/>
 				</div>
 
@@ -38,6 +88,8 @@ const Login = () => {
 						type="password"
 						placeholder="Your Password"
 						className="w-full mt-3 p-2 border rounded-lg bg-gray-50"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
 					/>
 				</div>
 
@@ -48,10 +100,22 @@ const Login = () => {
 				/>
 			</form>
 
-			<nav className="lg:flex lg:justify-between">
-				<Link to="/register" className="block text-center my-5 text-slate-500 uppercase text-sm">No account? Register here</Link>
+			{msg && <Alert alert={alert} />}
 
-				<Link to="/forgot-password" className="block text-center my-5 text-slate-500 uppercase text-sm">Forgot Password</Link>
+			<nav className="lg:flex lg:justify-between">
+				<Link
+					to="/register"
+					className="block text-center my-5 text-slate-500 uppercase text-sm"
+				>
+					No account? Register here
+				</Link>
+
+				<Link
+					to="/forgot-password"
+					className="block text-center my-5 text-slate-500 uppercase text-sm"
+				>
+					Forgot Password
+				</Link>
 			</nav>
 		</>
 	);

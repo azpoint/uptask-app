@@ -1,7 +1,7 @@
 import User from "../db/models/User.js";
 import genId from "../helpers/genId.js";
 import genJWT from "../helpers/genJWT.js";
-import { emailRegister } from "../helpers/emails.js"; 
+import { emailRegister, emailForgotPassword } from "../helpers/emails.js"; 
 
 const register = async (req, res) => {
 	//Avoid duplicated users
@@ -86,6 +86,7 @@ const confirm = async (req, res) => {
 };
 
 const forgotPassword = async (req, res) => {
+
 	const { email } = req.body;
 	
 	const user = await User.findOne({ email });
@@ -98,6 +99,15 @@ const forgotPassword = async (req, res) => {
 	try {
 		user.token = genId();
 		await user.save();
+
+		//Send email
+		emailForgotPassword({
+			email: user.email,
+			name: user.name,
+			token: user.token
+		})
+
+
 		res.json({ msg: "We sent an email with further instructions"})
 	} catch (error) {
 		console.log(error);
