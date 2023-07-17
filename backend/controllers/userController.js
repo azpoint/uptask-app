@@ -152,7 +152,9 @@ const newPassword = async (req, res) => {
 }
 
 const profile = async (req, res) => {
-	console.log("From Profile");
+	const { user } = req;
+
+	res.json(user)
 }
 
 export { register, authentication, confirm, forgotPassword, checkToken, newPassword, profile };
