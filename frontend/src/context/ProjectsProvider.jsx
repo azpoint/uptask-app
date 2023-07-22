@@ -51,6 +51,54 @@ const ProjectsProvider = ({ children }) => {
 	};
 
 	const submitProject = async (project) => {
+
+		if(project.id) {
+			await editProject(project)
+		} else {
+			await newProject(project)
+		}
+
+		
+	};
+
+	const editProject = async project => {
+		try {
+			const token = localStorage.getItem("token");
+
+			if (!token) return;
+
+			const config = {
+				headers: {
+					"Conten-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+			};
+
+			const { data } = await axios.put(
+				`${import.meta.env.VITE_BACKEND_URL}/api/projects/${project.id}`,
+				project,
+				config
+			);
+
+			const updatedProjects = projects.map(projectState => projectState._id === data._id ? data : projectState)
+
+			setProjects(updatedProjects);
+
+			setAlert({
+				msg: "Project Updated Successfully",
+				error: false,
+			});
+
+			setTimeout(() => {
+				setAlert({});
+				navigate("/projects");
+			}, 2000);
+		} catch (error) {
+			console.log(error);
+		}
+	}
+
+	const newProject = async project => {
 		try {
 			const token = localStorage.getItem("token");
 
@@ -78,12 +126,12 @@ const ProjectsProvider = ({ children }) => {
 
 			setTimeout(() => {
 				setAlert({});
-				// navigate("/projects");
-			}, 4000);
+				navigate("/projects");
+			}, 2000);
 		} catch (error) {
 			console.log(error);
 		}
-	};
+	}
 
 	const getProject = async (id) => {
 		setLoading(true);
@@ -112,6 +160,42 @@ const ProjectsProvider = ({ children }) => {
 		}
 	};
 
+	const deleteProject = async id => {
+		try {
+			const token = localStorage.getItem("token");
+
+			if (!token) return;
+
+			const config = {
+				headers: {
+					"Conten-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+			};
+
+			const { data } = await axios.delete(
+				`${import.meta.env.VITE_BACKEND_URL}/api/projects/${id}`,
+				config
+			);
+
+			//Sync the State
+			const updatedProjects = projects.filter(projectState => projectState._id !== id)
+			setProjects(updatedProjects)
+
+			setAlert({
+				msg: data.msg,
+				error: false
+			});
+
+			setTimeout(() => {
+				setAlert({});
+				navigate("/projects");
+			}, 2000);
+		} catch (error) {
+			console.log(error)
+		}
+	}
+
 	return (
 		<ProjectsContext.Provider
 			value={{
@@ -121,6 +205,8 @@ const ProjectsProvider = ({ children }) => {
 				submitProject,
 				getProject,
 				project,
+				loading,
+				deleteProject
 			}}
 		>
 			{children}

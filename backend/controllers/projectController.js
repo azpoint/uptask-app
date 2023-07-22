@@ -47,6 +47,7 @@ const getProject = async (req, res) => {
 
 const editProject = async (req, res) => {
 	const { id } = req.params;
+	
 
 	try {
 		const project = await Project.findById(id);
@@ -65,7 +66,8 @@ const editProject = async (req, res) => {
 		project.deliveryDate = req.body.deliveryDate || project.deliveryDate;
 		project.client = req.body.client || project.client;
 
-		const savedProject = project.save()
+		const savedProject = await project.save()
+
 		return res.json(savedProject)
 	} catch (error) {
 		const error2 = new Error("Project not Found!");
