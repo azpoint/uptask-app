@@ -14,6 +14,8 @@ const addTask = async (req, res) => {
 		}
 
 		const taskInDB = await Task.create(req.body);
+		projectInDB.tasks.push(taskInDB._id)
+		await projectInDB.save();
 		res.json(taskInDB)
 	} catch (error) {
 		const errorMsg = new Error("Project not available");
@@ -23,6 +25,7 @@ const addTask = async (req, res) => {
 
 const getTask = async (req, res) => {
 	const { id } = req.params
+	console.log("Is this the task id?", id)
 
 	try {
 		const task = await Task.findById(id).populate("project");

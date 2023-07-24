@@ -2,8 +2,7 @@ import Project from "../db/models/Project.js";
 import Task from "../db/models/Task.js";
 
 const getProjects = async (req, res) => {
-	const projects = await Project.find().where('creator').equals(req.user);
-
+	const projects = await Project.find().where('creator').equals(req.user).select("-tasks");
 	res.json(projects)
 };
 
@@ -24,7 +23,7 @@ const getProject = async (req, res) => {
 	const { id } = req.params;
 
 	try {
-		const project = await Project.findById(id);
+		const project = await Project.findById(id).populate("tasks");
 
 		if(!project) {
 			const error = new Error("Project not Found");
@@ -34,9 +33,6 @@ const getProject = async (req, res) => {
 			const error = new Error("You have no access to this project");
 			return res.status(401).json({msg: error.message})
 		}
-
-		// const tasks = await Task.find().where("project").equals(project._id);
-		
 
 		res.json(project)
 	} catch (error) {
