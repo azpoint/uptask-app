@@ -6,24 +6,27 @@ import {
 	getProject,
 	editProject,
 	deleteProject,
-	addColl,
-	deleteColl,
+	addCollaborators,
+	deleteCollaborators,
 	getTasks,
+	searchCollaborator,
 } from "../controllers/projectController.js";
 
-import checkAuth from "../middlewares/checkAuth.js"
+import checkAuth from "../middlewares/checkAuth.js";
 
 const router = express.Router();
 
-router.get('/', checkAuth, getProjects);
-router.post('/', checkAuth, newProject);
+router.get("/", checkAuth, getProjects);
+router.post("/", checkAuth, newProject);
 
-router.get('/:id', checkAuth, getProject);
-router.put('/:id', checkAuth, editProject);
-router.delete('/:id', checkAuth, deleteProject);
+router.get("/:id", checkAuth, getProject);
+router.put("/:id", checkAuth, editProject);
+router.delete("/:id", checkAuth, deleteProject);
 
-router.post('/add-coll/:id', checkAuth, addColl);
-router.post('/delete-coll/:id', checkAuth, deleteColl)
-router.get('/task/:id', checkAuth, getTasks);
+router.get("/task/:id", checkAuth, getTasks);
+
+router.post("/collaborators", checkAuth, searchCollaborator);
+router.post("/collaborators/:id", checkAuth, addCollaborators);
+router.post("/delete-collaborator/:id", checkAuth, deleteCollaborators);
 
 export default router;

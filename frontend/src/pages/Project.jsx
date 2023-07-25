@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 
 import useProjects from "../hooks/useProjects";
 
 import ModalTask from "../components/ModalFormTask";
 import ModalDeleteTask from "../components/ModalDeleteTask";
+import ModalDeleteCollaborator from "../components/ModalDeleteCollaborator";
 import ProjectTask from "../components/ProjectTask";
 import Alert from "../components/Alert";
+import Collaborator from "../components/Collaborator";
 
 const Project = () => {
 	const params = useParams();
@@ -75,7 +77,9 @@ const Project = () => {
 			<p className="font-semibold text-lg mt-10">Project Task</p>
 
 			<div className="flex justify-center">
-				<div className="md:w-1/3 lg:w-1/4">{msg && <Alert alert={alert} />}</div>
+				<div className="md:w-1/3 lg:w-1/4">
+					{msg && <Alert alert={alert} />}
+				</div>
 			</div>
 
 			<div className="bg-white shadow mt-10 rounded-lg">
@@ -88,9 +92,25 @@ const Project = () => {
 				)}
 			</div>
 
-			<ModalTask />
+			<div className="flex items-center justify-between mt-10">
+				<p className="font-semibold text-lg mt-10">Collaborators</p>
 
+				<Link to={`/projects/new-collaborator/${project._id}`} className="text-gray-400 uppercase font-semibold hover:text-black">Add</Link>
+			</div>
+
+			<div className="bg-white shadow mt-10 rounded-lg">
+				{project.coll?.length ? (
+					project.coll?.map((collaborator) => (
+						<Collaborator key={collaborator._id} collaborator={collaborator} />
+					))
+				) : (
+					<p className="text-center my-5 p-10">No collabs in here in here</p>
+				)}
+			</div>
+
+			<ModalTask />
 			<ModalDeleteTask />
+			<ModalDeleteCollaborator/>
 		</>
 	);
 };
