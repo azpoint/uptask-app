@@ -4,12 +4,9 @@ import User from "../db/models/User.js";
 
 const getProjects = async (req, res) => {
 	const projects = await Project.find({
-		'$or' : [
-			{'coll': {$in: req.user}},
-			{'creator': {$in: req.user}},
-		]
+		$or: [{ coll: { $in: req.user } }, { creator: { $in: req.user } }],
 	}).select("-tasks");
-	res.json(projects)
+	res.json(projects);
 };
 
 const newProject = async (req, res) => {
@@ -18,7 +15,7 @@ const newProject = async (req, res) => {
 	project.creator = req.user._id;
 
 	try {
-		const projectDB = await project.save()
+		const projectDB = await project.save();
 		res.json(projectDB);
 	} catch (error) {
 		console.log(error);
@@ -29,51 +26,58 @@ const getProject = async (req, res) => {
 	const { id } = req.params;
 
 	try {
-		const project = await Project.findById(id).populate("tasks").populate("coll", "name email");
+		const project = await Project.findById(id)
+		//Deep populate field in the query
+			.populate({ path: "tasks", populate: { path: "completed", select: "name"} })
+			.populate("coll", "name email");
 
-		if(!project) {
+		if (!project) {
 			const error = new Error("Project not Found");
-			return res.status(404).json({msg: error.message})
+			return res.status(404).json({ msg: error.message });
 		}
-		if(project.creator.toString() !== req.user._id.toString()) {
+		if (
+			project.creator.toString() !== req.user._id.toString() &&
+			!project.coll.some(
+				(collab) => collab._id.toString() === req.user._id.toString()
+			)
+		) {
 			const error = new Error("You have no access to this project");
-			return res.status(401).json({msg: error.message})
+			return res.status(401).json({ msg: error.message });
 		}
 
-		res.json(project)
+		res.json(project);
 	} catch (error) {
 		const error2 = new Error("Project not Found!");
-		res.status(404).json({msg: error2.message})
+		res.status(404).json({ msg: error2.message });
 	}
 };
 
 const editProject = async (req, res) => {
 	const { id } = req.params;
-	
 
 	try {
 		const project = await Project.findById(id);
 
-		if(!project) {
+		if (!project) {
 			const error = new Error("Project not Found");
-			return res.status(404).json({msg: error.message})
+			return res.status(404).json({ msg: error.message });
 		}
-		if(project.creator.toString() !== req.user._id.toString()) {
+		if (project.creator.toString() !== req.user._id.toString()) {
 			const error = new Error("You have no access to this project");
-			return res.status(401).json({msg: error.message})
+			return res.status(401).json({ msg: error.message });
 		}
-		
+
 		project.name = req.body.name || project.name;
 		project.description = req.body.description || project.description;
 		project.deliveryDate = req.body.deliveryDate || project.deliveryDate;
 		project.client = req.body.client || project.client;
 
-		const savedProject = await project.save()
+		const savedProject = await project.save();
 
-		return res.json(savedProject)
+		return res.json(savedProject);
 	} catch (error) {
 		const error2 = new Error("Project not Found!");
-		res.status(404).json({msg: error2.message})
+		res.status(404).json({ msg: error2.message });
 	}
 };
 
@@ -83,114 +87,116 @@ const deleteProject = async (req, res) => {
 	try {
 		const project = await Project.findById(id);
 
-		if(!project) {
+		if (!project) {
 			const error = new Error("Project not Found");
-			return res.status(404).json({msg: error.message})
+			return res.status(404).json({ msg: error.message });
 		}
-		if(project.creator.toString() !== req.user._id.toString()) {
+		if (project.creator.toString() !== req.user._id.toString()) {
 			const error = new Error("You have no access to this project");
-			return res.status(401).json({msg: error.message})
+			return res.status(401).json({ msg: error.message });
 		}
 		await project.deleteOne();
-		res.json({msg: "Project Deleted"})
+		res.json({ msg: "Project Deleted" });
 	} catch (error) {
 		const error2 = new Error("Project not Found!");
-		res.status(404).json({msg: error2.message})
+		res.status(404).json({ msg: error2.message });
 	}
 };
 
 const getTasks = async (req, res) => {
-	const {id } = req.params;
+	const { id } = req.params;
 
 	try {
-		const isAProject = await Project.findById(id)
+		const isAProject = await Project.findById(id);
 
-		if(!isAProject) {
+		if (!isAProject) {
 			const error = new Error("Project not Found");
-			return res.status(404).json({msg: error.message});
+			return res.status(404).json({ msg: error.message });
 		}
 
 		const tasks = await Task.find().where("project").equals(id);
-		res.json(tasks)
-	} catch (error) {
-		
-	}
+		res.json(tasks);
+	} catch (error) {}
 };
 
 const searchCollaborator = async (req, res) => {
-	const {email} = req.body
+	const { email } = req.body;
 
-	const user = await User.findOne({email}).select("-confirmed -password -createdAt -updatedAt -token -__v")
+	const user = await User.findOne({ email }).select(
+		"-confirmed -password -createdAt -updatedAt -token -__v"
+	);
 
-	if(!user){
+	if (!user) {
 		const error = new Error("User not found");
-		return res.status(404).json({msg: error.message})
+		return res.status(404).json({ msg: error.message });
 	}
 
-	res.json(user)
-}
+	res.json(user);
+};
 
 const addCollaborators = async (req, res) => {
-	const project = await Project.findById(req.params.id)
+	const project = await Project.findById(req.params.id);
 
-	if(!project) {
+	if (!project) {
 		const error = new Error("Project not Found");
-		return res.status(404).json({msg: error.message})
+		return res.status(404).json({ msg: error.message });
 	}
 
-	if(project.creator.toString() !== req.user._id.toString()) {
+	if (project.creator.toString() !== req.user._id.toString()) {
 		const error = new Error("Not valid action");
-		return res.status(404).json({msg: error.message})
+		return res.status(404).json({ msg: error.message });
 	}
 
-	const {email} = req.body
+	const { email } = req.body;
 
-	const user = await User.findOne({email}).select("-confirmed -password -createdAt -updatedAt -token -__v")
+	const user = await User.findOne({ email }).select(
+		"-confirmed -password -createdAt -updatedAt -token -__v"
+	);
 
-	if(!user){
+	if (!user) {
 		const error = new Error("User not found");
-		return res.status(404).json({msg: error.message})
+		return res.status(404).json({ msg: error.message });
 	}
 
 	//Collaborator is admin of the proyect
 
-	if(project.creator.toString() === user._id.toString()) {
+	if (project.creator.toString() === user._id.toString()) {
 		const error = new Error("You are the admin of this project!");
-		return res.status(404).json({msg: error.message})
+		return res.status(404).json({ msg: error.message });
 	}
 
 	//Collaborator allready in
-	if(project.coll.includes(user._id)) {
+	if (project.coll.includes(user._id)) {
 		const error = new Error("User allready in this project");
-		return res.status(404).json({msg: error.message})
+		return res.status(404).json({ msg: error.message });
 	}
 
 	//Collaborator is fine
 	project.coll.push(user._id);
-	await project.save()
+	await project.save();
 
-	res.json({msg: "Collaborator succesfully added"})
+	res.json({ msg: "Collaborator succesfully added" });
 };
 
 const deleteCollaborators = async (req, res) => {
-	const project = await Project.findById(req.params.id)
+	const project = await Project.findById(req.params.id);
 
-	if(!project) {
+	if (!project) {
 		const error = new Error("Project not Found");
-		return res.status(404).json({msg: error.message})
+		return res.status(404).json({ msg: error.message });
 	}
 
-	if(project.creator.toString() !== req.user._id.toString()) {
+	if (project.creator.toString() !== req.user._id.toString()) {
 		const error = new Error("Not valid action");
-		return res.status(404).json({msg: error.message})
+		return res.status(404).json({ msg: error.message });
 	}
 
 	//Collaborator can be deleted
 	project.coll.pull(req.body.id);
 
-	await project.save()
+	await project.save();
 
-	res.json({msg: "Collaborator succesfully Deleted"})
+	res.json({ msg: "Collaborator succesfully Deleted" });
 };
 
 export {
@@ -202,5 +208,5 @@ export {
 	addCollaborators,
 	deleteCollaborators,
 	getTasks,
-	searchCollaborator
+	searchCollaborator,
 };

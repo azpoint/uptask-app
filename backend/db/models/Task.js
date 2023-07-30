@@ -6,7 +6,11 @@ const taskSchema = mongoose.Schema({
 	state: { type: Boolean, default: false },
 	deliveryDate: { type: Date, required: true, default: Date.now() },
 	priority: { type: String, required: true, enum: ["Low", "Mid", "High"] },
-	project: { type: mongoose.Schema.Types.ObjectId, ref: "Project" }
+	project: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
+	completed: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "User"
+	}
 }, { timestamps: true });
 
 const Task = mongoose.model("Task", taskSchema);
