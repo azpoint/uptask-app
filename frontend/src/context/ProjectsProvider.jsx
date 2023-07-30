@@ -16,6 +16,7 @@ const ProjectsProvider = ({ children }) => {
 	const [modalDeleteTask, setModalDeleteTask] = useState(false);
 	const [collaborator, setCollaborator] = useState({});
 	const [modalDeleteCollaborator, setModalDeleteCollaborator] = useState(false);
+	const [ search, setSearch ] = useState(false)
 
 	const navigate = useNavigate();
 
@@ -158,10 +159,15 @@ const ProjectsProvider = ({ children }) => {
 
 			setProject(data);
 		} catch (error) {
+			navigate("/")
 			setAlert({
 				msg: error.response.data.msg,
 				error: true,
 			});
+
+			setTimeout(() => {
+				setAlert({})
+			}, 3000);
 		} finally {
 			setLoading(false);
 		}
@@ -294,6 +300,7 @@ const ProjectsProvider = ({ children }) => {
 	};
 
 	const deleteTask = async () => {
+
 		try {
 			const token = localStorage.getItem("token");
 
@@ -329,7 +336,7 @@ const ProjectsProvider = ({ children }) => {
 				setAlert({});
 			}, 2000);
 		} catch (error) {
-			console.log(error);
+			console.log(error.response.data.msg);
 		}
 	};
 
@@ -394,6 +401,7 @@ const ProjectsProvider = ({ children }) => {
 
 			setTimeout(() => {
 				setAlert({});
+				navigate(`/projects/${project._id}`);
 			}, 2000);
 
 			setCollaborator({});
@@ -464,6 +472,45 @@ const ProjectsProvider = ({ children }) => {
 		}
 	};
 
+	const completeTask = async (id) => {
+		try {
+			const token = localStorage.getItem("token");
+
+			if (!token) return;
+
+			const config = {
+				headers: {
+					"Conten-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+			};
+
+			const { data } = await axios.post(
+				`${import.meta.env.VITE_BACKEND_URL}/api/task/state/${id}`,
+				{},
+				config
+			);
+
+			const updatedProject = { ...project };
+
+			updatedProject.tasks = updatedProject.tasks.map(taskState =>
+				taskState._id === data._id ? data : taskState
+			);
+
+			setProject(updatedProject);
+			setTask({});
+			setAlert({});
+
+
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
+	const handleSearch = () => {
+		setSearch(!search)
+	}
+
 	return (
 		<ProjectsContext.Provider
 			value={{
@@ -489,6 +536,9 @@ const ProjectsProvider = ({ children }) => {
 				modalDeleteCollaborator,
 				handleModalDeleteCollaborator,
 				deleteCollaborator,
+				completeTask,
+				search,
+				handleSearch
 			}}
 		>
 			{children}

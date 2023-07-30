@@ -57,7 +57,7 @@ const FormProject = () => {
 	return (
 		<>
 			<form
-				className="bg-white py-10 px-5 md:w-full rounded-md w-1/2 shadow-lg"
+				className="bg-white py-10 px-5 md:w-1/2 rounded-md w-full shadow-lg"
 				onSubmit={handleSubmit}
 			>
 				<div className="mb-5">
