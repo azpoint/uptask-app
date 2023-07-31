@@ -39,5 +39,7 @@ app.use("/api/task", taskRoutes);
 
 app.listen(process.env.PORT, () => {
 	console.log(`Server running on port ${process.env.PORT}`)
-})
+});
+
+//Socket.io
 
