@@ -1,6 +1,11 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, createContext } from "react";
 import { useNavigate } from "react-router-dom";
+import io from "socket.io-client";
+
+import useAuth from "../hooks/useAuth";
+
+let socket;
 
 import axios from "axios";
 
@@ -16,9 +21,10 @@ const ProjectsProvider = ({ children }) => {
 	const [modalDeleteTask, setModalDeleteTask] = useState(false);
 	const [collaborator, setCollaborator] = useState({});
 	const [modalDeleteCollaborator, setModalDeleteCollaborator] = useState(false);
-	const [ search, setSearch ] = useState(false)
+	const [search, setSearch] = useState(false);
 
 	const navigate = useNavigate();
+	const { auth } = useAuth();
 
 	useEffect(() => {
 		const getProjects = async () => {
@@ -46,6 +52,10 @@ const ProjectsProvider = ({ children }) => {
 		};
 
 		getProjects();
+	}, [auth]);
+
+	useEffect(() => {
+		socket = io(import.meta.env.VITE_BACKEND_URL);
 	}, []);
 
 	const showAlert = (alert) => {
@@ -159,14 +169,14 @@ const ProjectsProvider = ({ children }) => {
 
 			setProject(data);
 		} catch (error) {
-			navigate("/")
+			navigate("/");
 			setAlert({
 				msg: error.response.data.msg,
 				error: true,
 			});
 
 			setTimeout(() => {
-				setAlert({})
+				setAlert({});
 			}, 3000);
 		} finally {
 			setLoading(false);
@@ -244,13 +254,12 @@ const ProjectsProvider = ({ children }) => {
 			);
 
 			//Add task to the state
-			const updatedProject = { ...project };
 
-			updatedProject.tasks = [...project.tasks, data];
-
-			setProject(updatedProject);
 			setAlert({});
 			setModalFormTask(false);
+
+			//Socket IO
+			socket.emit("new-task", data);
 		} catch (error) {
 			console.log(error);
 		}
@@ -275,15 +284,11 @@ const ProjectsProvider = ({ children }) => {
 				config
 			);
 
-			const updatedProject = { ...project };
-			updatedProject.tasks = updatedProject.tasks.map((taksState) =>
-				taksState._id === data._id ? data : taksState
-			);
-
-			setProject(updatedProject);
-
 			setAlert({});
 			setModalFormTask(false);
+
+			//Socket IO
+			socket.emit("update-task", data);
 		} catch (error) {
 			console.log(error);
 		}
@@ -300,7 +305,6 @@ const ProjectsProvider = ({ children }) => {
 	};
 
 	const deleteTask = async () => {
-
 		try {
 			const token = localStorage.getItem("token");
 
@@ -322,16 +326,12 @@ const ProjectsProvider = ({ children }) => {
 				msg: data.msg,
 				error: false,
 			});
-
-			const updatedProject = { ...project };
-			updatedProject.tasks = updatedProject.tasks.filter(
-				(taskState) => taskState._id !== task._id
-			);
-
-			setProject(updatedProject);
 			setModalDeleteTask(false);
-			setTask({});
 
+			//Socket IO
+			socket.emit("delete-task", task);
+
+			setTask({});
 			setTimeout(() => {
 				setAlert({});
 			}, 2000);
@@ -491,25 +491,60 @@ const ProjectsProvider = ({ children }) => {
 				config
 			);
 
-			const updatedProject = { ...project };
-
-			updatedProject.tasks = updatedProject.tasks.map(taskState =>
-				taskState._id === data._id ? data : taskState
-			);
-
-			setProject(updatedProject);
 			setTask({});
 			setAlert({});
 
-
+			//Socket
+			socket.emit("change-state", data);
 		} catch (error) {
 			console.log(error);
 		}
 	};
 
 	const handleSearch = () => {
-		setSearch(!search)
-	}
+		setSearch(!search);
+	};
+
+	//Socket io
+
+	const submitTaskProject = (task) => {
+		const updatedProject = { ...project };
+		updatedProject.tasks = [...updatedProject.tasks, task];
+		setProject(updatedProject);
+	};
+
+	const deletedTaskProject = (task) => {
+		const updatedProject = { ...project };
+		updatedProject.tasks = updatedProject.tasks.filter(
+			(taskState) => taskState._id !== task._id
+		);
+
+		setProject(updatedProject);
+	};
+
+	const updateTaskProject = (task) => {
+		const updatedProject = { ...project };
+		updatedProject.tasks = updatedProject.tasks.map((taksState) =>
+			taksState._id === task._id ? task : taksState
+		);
+
+		setProject(updatedProject);
+	};
+
+	const changeStateTask = (task) => {
+		const updatedProject = { ...project };
+		updatedProject.tasks = updatedProject.tasks.map((taskState) =>
+			taskState._id === task._id ? task : taskState
+		);
+
+		setProject(updatedProject);
+	};
+
+	const logoutSessions = () => {
+		setProjects([]);
+		setProject({});
+		setAlert({});
+	};
 
 	return (
 		<ProjectsContext.Provider
@@ -538,7 +573,12 @@ const ProjectsProvider = ({ children }) => {
 				deleteCollaborator,
 				completeTask,
 				search,
-				handleSearch
+				handleSearch,
+				submitTaskProject,
+				deletedTaskProject,
+				updateTaskProject,
+				changeStateTask,
+				logoutSessions,
 			}}
 		>
 			{children}

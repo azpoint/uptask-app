@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import io from "socket.io-client";
 
 import useProjects from "../hooks/useProjects";
 import useAdmin from "../hooks/useAdmin";
@@ -11,11 +12,22 @@ import ProjectTask from "../components/ProjectTask";
 import Alert from "../components/Alert";
 import Collaborator from "../components/Collaborator";
 
+let socket;
+
 const Project = () => {
 	const params = useParams();
 
-	const { getProject, project, loading, handleModalTask, alert } =
-		useProjects();
+	const {
+		getProject,
+		project,
+		loading,
+		handleModalTask,
+		alert,
+		submitTaskProject,
+		deletedTaskProject,
+		updateTaskProject,
+		changeStateTask
+	} = useProjects();
 
 	const admin = useAdmin();
 
@@ -23,13 +35,44 @@ const Project = () => {
 		getProject(params.id);
 	}, []);
 
+	useEffect(() => {
+		socket = io(import.meta.env.VITE_BACKEND_URL);
+		socket.emit("open-project", params.id);
+	}, []);
+
+	useEffect(() => {
+		socket.on("task-added", (newTask) => {
+			if (newTask.project === project._id) {
+				submitTaskProject(newTask);
+			}
+		});
+
+		socket.on("deleted-task", (deletedTask) => {
+			if (deletedTask.project === project._id) {
+				deletedTaskProject(deletedTask);
+			}
+		});
+
+		socket.on("updated-task", (taskUpdated) => {
+			if (taskUpdated.project._id === project._id) {
+				updateTaskProject(taskUpdated);
+			}
+		});
+
+		socket.on("new-state", newStateTask => {
+			if(newStateTask.project._id === project._id) {
+				changeStateTask(newStateTask)
+			}
+		})
+	});
+
 	const { name } = project;
 
 	const { msg } = alert;
 
-	if(loading) return "Loading...";
-	
-	return  (
+	if (loading) return "Loading...";
+
+	return (
 		<>
 			<div className="flex justify-between">
 				<h1 className="font-bold text-4xl">{name}</h1>
